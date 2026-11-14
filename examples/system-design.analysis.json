@@ -1,0 +1,126 @@
+{
+  "worthy": true,
+  "worthinessReason": "A learning arc with real explanations, a clear breakthrough, and a corrected misconception.",
+  "forest": [
+    {
+      "id": "sd",
+      "title": "System Design",
+      "summary": "Learn the building blocks first, then study how they interact in real systems.",
+      "messages": ["m1", "m2"],
+      "ledBy": "user",
+      "depth": 1,
+      "links": [],
+      "children": [
+        {
+          "id": "sd.load-balancers",
+          "title": "Load Balancers",
+          "summary": "A load balancer routes incoming requests across servers so none gets overloaded; it runs no app logic itself. Needed because horizontal scaling requires something to pick a server for each request.",
+          "messages": ["m3", "m4", "m5", "m6", "m7", "m8", "m9"],
+          "ledBy": "assistant",
+          "depth": 0.55,
+          "links": [],
+          "children": []
+        },
+        {
+          "id": "sd.caching",
+          "title": "Caching",
+          "summary": "Storing the result of an expensive operation so repeated requests are answered fast.",
+          "messages": ["m10"],
+          "ledBy": "assistant",
+          "depth": 0.08,
+          "links": [],
+          "children": []
+        },
+        {
+          "id": "sd.frontend",
+          "title": "Frontend System Design",
+          "summary": "Frontend has its own scaling concerns: bundle size, rendering strategy, real-time updates via WebSockets, and micro-frontends.",
+          "messages": ["m11", "m12", "m13"],
+          "ledBy": "user",
+          "depth": 0.23,
+          "links": [],
+          "children": []
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "kind": "breakthrough",
+      "group": "understanding",
+      "nodeIds": ["sd.load-balancers"],
+      "trigger": ["m5", "m7", "m9"],
+      "cause": ["m8"],
+      "before": "I still don't get why we need it.",
+      "after": "It's just the host at the door.",
+      "confidence": 0.95
+    },
+    {
+      "kind": "misconception",
+      "group": "understanding",
+      "nodeIds": ["sd.frontend"],
+      "trigger": ["m11", "m13"],
+      "cause": ["m12"],
+      "before": "I always thought it was only a backend thing.",
+      "after": "Frontend has its own scaling problems too.",
+      "confidence": 0.9
+    },
+    {
+      "kind": "tangent",
+      "group": "engagement",
+      "nodeIds": ["sd.frontend"],
+      "trigger": ["m11"],
+      "confidence": 0.85
+    },
+    {
+      "kind": "emotion",
+      "group": "stance",
+      "nodeIds": ["sd.load-balancers"],
+      "trigger": ["m9"],
+      "after": "Relief: \"Finally.\"",
+      "confidence": 0.8
+    }
+  ],
+  "angles": [
+    {
+      "title": "The Restaurant Analogy That Finally Made Load Balancers Click",
+      "type": "personal-story",
+      "nodeIds": ["sd.load-balancers"],
+      "signalIndexes": [0, 3],
+      "hook": "Two textbook explanations failed; one everyday analogy worked.",
+      "researchNeed": "low"
+    },
+    {
+      "title": "I Used to Think Frontend Didn't Need System Design",
+      "type": "personal-story",
+      "nodeIds": ["sd.frontend"],
+      "signalIndexes": [1, 2],
+      "hook": "A common belief among frontend engineers, and why it's wrong.",
+      "researchNeed": "medium"
+    },
+    {
+      "title": "How Load Balancers Work",
+      "type": "deep-dive",
+      "nodeIds": ["sd.load-balancers"],
+      "signalIndexes": [],
+      "hook": "Why one big server isn't enough, and what decides where requests go.",
+      "researchNeed": "medium"
+    },
+    {
+      "title": "What Frontend System Design Actually Covers",
+      "type": "overview",
+      "nodeIds": ["sd.frontend"],
+      "signalIndexes": [],
+      "hook": "The four areas frontend interviews test.",
+      "researchNeed": "medium"
+    },
+    {
+      "title": "System Design Building Blocks for Interviews",
+      "type": "overview",
+      "nodeIds": ["sd"],
+      "signalIndexes": [],
+      "hook": "Where to start and in what order.",
+      "researchNeed": "high"
+    }
+  ]
+}
