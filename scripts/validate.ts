@@ -34,6 +34,7 @@ const SignalGroupSchema = z.enum(["understanding", "action", "stance", "engageme
 const SignalKindSchema = z.custom<SignalKind>((v) => typeof v === "string" && v.length > 0, "kind must be a non-empty string");
 
 const SignalSchema = z.strictObject({
+  id: z.string().regex(/^s[1-9]\d*$/, 'signal ids look like "s1", "s2", ...'),
   kind: SignalKindSchema,
   group: SignalGroupSchema,
   nodeIds: z.array(z.string()).min(1),
@@ -48,7 +49,7 @@ const AngleSchema = z.strictObject({
   title: z.string().min(1),
   type: z.enum(["overview", "deep-dive", "case-study", "listicle", "journey", "personal-story", "opinion", "comparison"]),
   nodeIds: z.array(z.string()).min(1),
-  signalIndexes: z.array(z.number().int().min(0)),
+  signalIds: z.array(z.string()),
   hook: z.string().min(1),
   researchNeed: z.enum(["low", "medium", "high"]),
 });
@@ -56,6 +57,8 @@ const AngleSchema = z.strictObject({
 export const AnalysisSchema = z.strictObject({
   worthy: z.boolean(),
   worthinessReason: z.string().min(1),
+  worthinessEvidence: z.array(MessageIdSchema),
+  messageIndex: z.record(MessageIdSchema, z.string().regex(/^(user|assistant): \S/, 'summaries start with "user: " or "assistant: "')),
   forest: z.array(TopicNodeSchema),
   signals: z.array(SignalSchema),
   angles: z.array(AngleSchema),
@@ -84,17 +87,39 @@ function crossCheck(a: Analysis): string[] {
   };
   a.forest.forEach(walk);
 
-  for (const n of nodes.values())
-    for (const l of n.links) if (!nodes.has(l)) errors.push(`node "${n.id}": links to unknown node "${l}"`);
+  // messageIndex must cover m1..mN with no gaps; every cited message must be in it.
+  const ids = Object.keys(a.messageIndex);
+  const count = ids.length;
+  for (let i = 1; i <= count; i++)
+    if (!(`m${i}` in a.messageIndex)) errors.push(`messageIndex: missing m${i} (must cover m1..m${count} with no gaps)`);
+  if (count === 0) errors.push("messageIndex: must have one entry per message");
+  const role = (m: string) => a.messageIndex[m]?.split(":")[0];
+  const cite = (where: string, ms: string[] | undefined, want?: "user" | "assistant") => {
+    for (const m of ms ?? []) {
+      if (!(m in a.messageIndex)) errors.push(`${where}: cites ${m}, which is not in messageIndex`);
+      else if (want && role(m) !== want) errors.push(`${where}: ${m} is a ${role(m)} message, expected ${want}`);
+    }
+  };
 
-  a.signals.forEach((s, i) => {
-    for (const id of s.nodeIds) if (!nodes.has(id)) errors.push(`signals[${i}]: unknown node "${id}"`);
-  });
+  cite("worthinessEvidence", a.worthinessEvidence);
+
+  for (const n of nodes.values()) {
+    cite(`node "${n.id}".messages`, n.messages);
+    for (const l of n.links) if (!nodes.has(l)) errors.push(`node "${n.id}": links to unknown node "${l}"`);
+  }
+
+  const signalIds = new Set<string>();
+  for (const s of a.signals) {
+    if (signalIds.has(s.id)) errors.push(`signals: duplicate id "${s.id}"`);
+    signalIds.add(s.id);
+    for (const id of s.nodeIds) if (!nodes.has(id)) errors.push(`signal ${s.id}: unknown node "${id}"`);
+    cite(`signal ${s.id}.trigger`, s.trigger, "user");
+    cite(`signal ${s.id}.cause`, s.cause, "assistant");
+  }
 
   a.angles.forEach((ang, i) => {
     for (const id of ang.nodeIds) if (!nodes.has(id)) errors.push(`angles[${i}]: unknown node "${id}"`);
-    for (const idx of ang.signalIndexes)
-      if (idx >= a.signals.length) errors.push(`angles[${i}]: signal index ${idx} out of range`);
+    for (const id of ang.signalIds) if (!signalIds.has(id)) errors.push(`angles[${i}]: unknown signal "${id}"`);
   });
 
   if (!a.worthy && (a.forest.length || a.signals.length || a.angles.length))

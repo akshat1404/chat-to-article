@@ -5,6 +5,8 @@ export type MessageId = string; // "m1", "m2", ... in chat order, user and assis
 export type Analysis = {
   worthy: boolean;
   worthinessReason: string; // why it is or isn't article material
+  worthinessEvidence: MessageId[]; // messages that back up worthinessReason
+  messageIndex: Record<MessageId, string>; // one line per message, prefixed "user:" or "assistant:"
   forest: TopicNode[]; // one root per unrelated theme (system design, bodybuilding)
   signals: Signal[];
   angles: Angle[];
@@ -35,6 +37,7 @@ export type SignalKind =
   | (string & {}); // open taxonomy: new kinds allowed without schema changes
 
 export type Signal = {
+  id: string; // "s1", "s2", ... in order of detection; angles reference these
   kind: SignalKind;
   group: SignalGroup;
   nodeIds: string[]; // usually one; synthesis links two or more
@@ -51,7 +54,7 @@ export type Angle = {
   title: string;
   type: AngleType;
   nodeIds: string[];
-  signalIndexes: number[]; // indexes into Analysis.signals; empty for plain explainers
+  signalIds: string[]; // Signal.id values, not array positions; empty for plain explainers
   hook: string; // one line on why a reader would click
   researchNeed: "low" | "medium" | "high"; // journey = low, health/finance claims = high
 };

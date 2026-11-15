@@ -1,6 +1,14 @@
 {
   "worthy": false,
   "worthinessReason": "A one-off drafting task with no explanations, learning arc, or original thinking.",
+  "worthinessEvidence": ["m1", "m3", "m5"],
+  "messageIndex": {
+    "m1": "user: asks how to reply to a LinkedIn comment calling their post \"caching with extra steps\"",
+    "m2": "assistant: drafts a friendly reply saying invalidation is the difference",
+    "m3": "user: asks for a shorter version",
+    "m4": "assistant: gives a shorter reply",
+    "m5": "user: says they posted it"
+  },
   "forest": [],
   "signals": [],
   "angles": []

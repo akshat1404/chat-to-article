@@ -1,6 +1,22 @@
 {
   "worthy": true,
   "worthinessReason": "A learning arc with real explanations, a clear breakthrough, and a corrected misconception.",
+  "worthinessEvidence": ["m5", "m7", "m8", "m9", "m11", "m13"],
+  "messageIndex": {
+    "m1": "user: wants to learn system design for interviews",
+    "m2": "assistant: suggests building blocks first (load balancers, caching, rate limiting, databases), then real systems like Uber",
+    "m3": "user: picks load balancers to start",
+    "m4": "assistant: explains load balancers spread requests across servers; round robin and least connections",
+    "m5": "user: still doesn't see why a load balancer is needed instead of one bigger server",
+    "m6": "assistant: explains vertical vs horizontal scaling and single point of failure",
+    "m7": "user: still confused about where the load balancer sits and how it differs from a server",
+    "m8": "assistant: restaurant host analogy: the host seats customers but cooks nothing",
+    "m9": "user: it finally makes sense, \"the host at the door\"",
+    "m10": "assistant: introduces caching as storing results of expensive operations",
+    "m11": "user: asks if frontend has system design; thought it was backend only",
+    "m12": "assistant: lists frontend concerns: bundle size, rendering strategy, WebSockets, micro-frontends",
+    "m13": "user: surprised; realises frontend has its own scaling problems"
+  },
   "forest": [
     {
       "id": "sd",
@@ -46,6 +62,7 @@
   ],
   "signals": [
     {
+      "id": "s1",
       "kind": "breakthrough",
       "group": "understanding",
       "nodeIds": ["sd.load-balancers"],
@@ -56,6 +73,7 @@
       "confidence": 0.95
     },
     {
+      "id": "s2",
       "kind": "misconception",
       "group": "understanding",
       "nodeIds": ["sd.frontend"],
@@ -66,6 +84,7 @@
       "confidence": 0.9
     },
     {
+      "id": "s3",
       "kind": "tangent",
       "group": "engagement",
       "nodeIds": ["sd.frontend"],
@@ -73,6 +92,7 @@
       "confidence": 0.85
     },
     {
+      "id": "s4",
       "kind": "emotion",
       "group": "stance",
       "nodeIds": ["sd.load-balancers"],
@@ -86,7 +106,7 @@
       "title": "The Restaurant Analogy That Finally Made Load Balancers Click",
       "type": "personal-story",
       "nodeIds": ["sd.load-balancers"],
-      "signalIndexes": [0, 3],
+      "signalIds": ["s1", "s4"],
       "hook": "Two textbook explanations failed; one everyday analogy worked.",
       "researchNeed": "low"
     },
@@ -94,7 +114,7 @@
       "title": "I Used to Think Frontend Didn't Need System Design",
       "type": "personal-story",
       "nodeIds": ["sd.frontend"],
-      "signalIndexes": [1, 2],
+      "signalIds": ["s2", "s3"],
       "hook": "A common belief among frontend engineers, and why it's wrong.",
       "researchNeed": "medium"
     },
@@ -102,7 +122,7 @@
       "title": "How Load Balancers Work",
       "type": "deep-dive",
       "nodeIds": ["sd.load-balancers"],
-      "signalIndexes": [],
+      "signalIds": [],
       "hook": "Why one big server isn't enough, and what decides where requests go.",
       "researchNeed": "medium"
     },
@@ -110,7 +130,7 @@
       "title": "What Frontend System Design Actually Covers",
       "type": "overview",
       "nodeIds": ["sd.frontend"],
-      "signalIndexes": [],
+      "signalIds": [],
       "hook": "The four areas frontend interviews test.",
       "researchNeed": "medium"
     },
@@ -118,7 +138,7 @@
       "title": "System Design Building Blocks for Interviews",
       "type": "overview",
       "nodeIds": ["sd"],
-      "signalIndexes": [],
+      "signalIds": [],
       "hook": "Where to start and in what order.",
       "researchNeed": "high"
     }
