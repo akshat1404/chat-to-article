@@ -62,6 +62,12 @@ New kinds are allowed if a moment fits none of these.
 
 Write `analysis.json` matching the output schema below, then reply with a short summary: the trees, the strongest 3 signals, and the top 5 angles.
 
+Follow the schema exactly:
+
+- Use the exact field names and types from the schema. Do not rename fields (`messages`, not `sources`), merge them into objects, or add new ones.
+- Include every required field on every object, including `depth` and `links` on every node.
+- When a list has nothing in it, write an empty array (`[]`). Never leave a field out.
+
 ## Output schema
 
 `analysis.json` must match these types exactly.
