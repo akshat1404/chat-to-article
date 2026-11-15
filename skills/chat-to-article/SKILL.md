@@ -13,7 +13,13 @@ Read the whole conversation from the first message. Number every message in orde
 
 Fill `messageIndex` with one entry per message: a one-line summary prefixed `user:` or `assistant:` (`"m5": "user: still doesn't see why a load balancer is needed"`). Later stages use it to look up messages without re-reading the chat, so cover every message, m1 to the last.
 
-## Step 2: Worthiness gate
+## Step 2: Flag personal details
+
+List every personal detail the user revealed in `sensitive`, even if the chat turns out not worthy. For each one, give a short `detail` ("salary of 18 LPA", "age 27", "banks with HDFC"), a `category` (income, age, health, location, employer, financial-account, relationship, other), and the `messages` where it appears. Use `[]` if there are none.
+
+**Never put ID numbers or account numbers into any field**: no card, bank account, PAN, Aadhaar, SSN, passport or phone numbers. Describe them instead ("shared a bank account number").
+
+## Step 3: Worthiness gate
 
 Decide whether the chat holds article material. It is worthy if it has at least one of: real explanations, a learning arc, a decision with reasoning, or the user's own original thinking. It is not worthy if it is a one-off task (drafting a reply, fixing a typo, a single fact lookup).
 
@@ -21,7 +27,7 @@ Put the messages that back up the reason in `worthinessEvidence`.
 
 If not worthy, set `worthy: false`, give the reason in one sentence, and stop: write `analysis.json` with empty `forest`, `signals` and `angles`. Never pad a weak chat into an article.
 
-## Step 3: Build the content forest
+## Step 4: Build the content forest
 
 - Make one tree per unrelated theme. System design and bodybuilding in the same chat are two separate roots.
 - Nest subtopics under the theme they belong to (system design > caching > Redis).
@@ -29,7 +35,7 @@ If not worthy, set `worthy: false`, give the reason in one sentence, and stop: w
 - Record `ledBy`: "user" if the user raised the topic, "assistant" if it came from Claude's roadmap.
 - Add `links` when one topic reuses another (Uber's design uses caching).
 
-## Step 4: Detect signals
+## Step 5: Detect signals
 
 A signal is any moment where the user's state changes. Rules:
 
@@ -57,14 +63,15 @@ A signal is any moment where the user's state changes. Rules:
 
 New kinds are allowed if a moment fits none of these.
 
-## Step 5: Derive angles
+## Step 6: Derive angles
 
 - A node alone gives an explainer (overview, deep-dive, case-study, listicle, comparison).
 - A node plus a signal gives a personal angle (personal-story, journey, opinion). Rank these first, because nobody else can write them.
 - List the signals an angle uses in `signalIds` by their `id` ("s1"), never by array position.
 - Set `researchNeed`: low for journeys (the chat is the source), high for health, finance, or legal claims.
+- Titles and hooks may use personal details, but list every detail an angle depends on in `usesSensitive`, copying the `detail` text from `sensitive` exactly. Stage 2 asks the user whether to keep, generalise or drop each one. Use `[]` if the angle uses none.
 
-## Step 6: Output
+## Step 7: Output
 
 Write `analysis.json` matching the output schema below, then reply with a short summary: the trees, the strongest 3 signals, and the top 5 angles.
 
@@ -73,6 +80,7 @@ Follow the schema exactly:
 - Use the exact field names and types from the schema. Do not rename fields (`messages`, not `sources`), merge them into objects, or add new ones.
 - Include every required field on every object, including `depth` and `links` on every node.
 - When a list has nothing in it, write an empty array (`[]`). Never leave a field out.
+- No ID numbers or account numbers anywhere in the file.
 
 ## Output schema
 
@@ -88,6 +96,7 @@ export type Analysis = {
   worthinessReason: string; // why it is or isn't article material
   worthinessEvidence: MessageId[]; // messages that back up worthinessReason
   messageIndex: Record<MessageId, string>; // one line per message, prefixed "user:" or "assistant:"
+  sensitive: SensitiveDetail[]; // every personal detail the user revealed; [] if none
   forest: TopicNode[]; // one root per unrelated theme (system design, bodybuilding)
   signals: Signal[];
   angles: Angle[];
@@ -138,5 +147,16 @@ export type Angle = {
   signalIds: string[]; // Signal.id values, not array positions; empty for plain explainers
   hook: string; // one line on why a reader would click
   researchNeed: "low" | "medium" | "high"; // journey = low, health/finance claims = high
+  usesSensitive: string[]; // SensitiveDetail.detail values this angle depends on; Stage 2 asks keep, generalise or drop
+};
+
+export type SensitiveCategory =
+  | "income" | "age" | "health" | "location" | "employer"
+  | "financial-account" | "relationship" | "other";
+
+export type SensitiveDetail = {
+  detail: string; // short description, e.g. "salary of 18 LPA"; never an ID or account number
+  category: SensitiveCategory;
+  messages: MessageId[]; // where the user revealed it
 };
 ```

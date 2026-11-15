@@ -7,6 +7,7 @@ export type Analysis = {
   worthinessReason: string; // why it is or isn't article material
   worthinessEvidence: MessageId[]; // messages that back up worthinessReason
   messageIndex: Record<MessageId, string>; // one line per message, prefixed "user:" or "assistant:"
+  sensitive: SensitiveDetail[]; // every personal detail the user revealed; [] if none
   forest: TopicNode[]; // one root per unrelated theme (system design, bodybuilding)
   signals: Signal[];
   angles: Angle[];
@@ -57,4 +58,15 @@ export type Angle = {
   signalIds: string[]; // Signal.id values, not array positions; empty for plain explainers
   hook: string; // one line on why a reader would click
   researchNeed: "low" | "medium" | "high"; // journey = low, health/finance claims = high
+  usesSensitive: string[]; // SensitiveDetail.detail values this angle depends on; Stage 2 asks keep, generalise or drop
+};
+
+export type SensitiveCategory =
+  | "income" | "age" | "health" | "location" | "employer"
+  | "financial-account" | "relationship" | "other";
+
+export type SensitiveDetail = {
+  detail: string; // short description, e.g. "salary of 18 LPA"; never an ID or account number
+  category: SensitiveCategory;
+  messages: MessageId[]; // where the user revealed it
 };

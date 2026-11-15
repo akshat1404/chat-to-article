@@ -17,6 +17,7 @@
     "m12": "assistant: lists frontend concerns: bundle size, rendering strategy, WebSockets, micro-frontends",
     "m13": "user: surprised; realises frontend has its own scaling problems"
   },
+  "sensitive": [],
   "forest": [
     {
       "id": "sd",
@@ -108,7 +109,8 @@
       "nodeIds": ["sd.load-balancers"],
       "signalIds": ["s1", "s4"],
       "hook": "Two textbook explanations failed; one everyday analogy worked.",
-      "researchNeed": "low"
+      "researchNeed": "low",
+      "usesSensitive": []
     },
     {
       "title": "I Used to Think Frontend Didn't Need System Design",
@@ -116,7 +118,8 @@
       "nodeIds": ["sd.frontend"],
       "signalIds": ["s2", "s3"],
       "hook": "A common belief among frontend engineers, and why it's wrong.",
-      "researchNeed": "medium"
+      "researchNeed": "medium",
+      "usesSensitive": []
     },
     {
       "title": "How Load Balancers Work",
@@ -124,7 +127,8 @@
       "nodeIds": ["sd.load-balancers"],
       "signalIds": [],
       "hook": "Why one big server isn't enough, and what decides where requests go.",
-      "researchNeed": "medium"
+      "researchNeed": "medium",
+      "usesSensitive": []
     },
     {
       "title": "What Frontend System Design Actually Covers",
@@ -132,7 +136,8 @@
       "nodeIds": ["sd.frontend"],
       "signalIds": [],
       "hook": "The four areas frontend interviews test.",
-      "researchNeed": "medium"
+      "researchNeed": "medium",
+      "usesSensitive": []
     },
     {
       "title": "System Design Building Blocks for Interviews",
@@ -140,7 +145,8 @@
       "nodeIds": ["sd"],
       "signalIds": [],
       "hook": "Where to start and in what order.",
-      "researchNeed": "high"
+      "researchNeed": "high",
+      "usesSensitive": []
     }
   ]
 }

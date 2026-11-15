@@ -9,6 +9,7 @@
     "m4": "assistant: gives a shorter reply",
     "m5": "user: says they posted it"
   },
+  "sensitive": [],
   "forest": [],
   "signals": [],
   "angles": []

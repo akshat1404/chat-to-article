@@ -9,7 +9,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import type { Analysis, Angle, Signal, SignalKind, TopicNode } from "../skills/chat-to-article/schema.ts";
+import type { Analysis, Angle, SensitiveDetail, Signal, SignalKind, TopicNode } from "../skills/chat-to-article/schema.ts";
 
 // ---------- shape ----------
 
@@ -52,6 +52,13 @@ const AngleSchema = z.strictObject({
   signalIds: z.array(z.string()),
   hook: z.string().min(1),
   researchNeed: z.enum(["low", "medium", "high"]),
+  usesSensitive: z.array(z.string()),
+});
+
+const SensitiveDetailSchema = z.strictObject({
+  detail: z.string().min(1),
+  category: z.enum(["income", "age", "health", "location", "employer", "financial-account", "relationship", "other"]),
+  messages: z.array(MessageIdSchema).min(1),
 });
 
 export const AnalysisSchema = z.strictObject({
@@ -59,6 +66,7 @@ export const AnalysisSchema = z.strictObject({
   worthinessReason: z.string().min(1),
   worthinessEvidence: z.array(MessageIdSchema),
   messageIndex: z.record(MessageIdSchema, z.string().regex(/^(user|assistant): \S/, 'summaries start with "user: " or "assistant: "')),
+  sensitive: z.array(SensitiveDetailSchema),
   forest: z.array(TopicNodeSchema),
   signals: z.array(SignalSchema),
   angles: z.array(AngleSchema),
@@ -72,6 +80,7 @@ export type SchemaMatchesTypes = [
   Expect<Equal<z.infer<typeof TopicNodeSchema>, TopicNode>>,
   Expect<Equal<z.infer<typeof SignalSchema>, Signal>>,
   Expect<Equal<z.infer<typeof AngleSchema>, Angle>>,
+  Expect<Equal<z.infer<typeof SensitiveDetailSchema>, SensitiveDetail>>,
   Expect<Equal<z.infer<typeof AnalysisSchema>, Analysis>>,
 ];
 
@@ -88,20 +97,26 @@ function crossCheck(a: Analysis): string[] {
   a.forest.forEach(walk);
 
   // messageIndex must cover m1..mN with no gaps; every cited message must be in it.
-  const ids = Object.keys(a.messageIndex);
-  const count = ids.length;
-  for (let i = 1; i <= count; i++)
-    if (!(`m${i}` in a.messageIndex)) errors.push(`messageIndex: missing m${i} (must cover m1..m${count} with no gaps)`);
-  if (count === 0) errors.push("messageIndex: must have one entry per message");
+  const last = Math.max(0, ...Object.keys(a.messageIndex).map((m) => Number(m.slice(1))));
+  for (let i = 1; i <= last; i++)
+    if (!(`m${i}` in a.messageIndex)) errors.push(`messageIndex: missing m${i} (must cover m1..m${last} with no gaps)`);
+  if (last === 0) errors.push("messageIndex: must have one entry per message");
   const role = (m: string) => a.messageIndex[m]?.split(":")[0];
   const cite = (where: string, ms: string[] | undefined, want?: "user" | "assistant") => {
     for (const m of ms ?? []) {
       if (!(m in a.messageIndex)) errors.push(`${where}: cites ${m}, which is not in messageIndex`);
-      else if (want && role(m) !== want) errors.push(`${where}: ${m} is a ${role(m)} message, expected ${want}`);
+      else if (want && role(m) !== want) errors.push(`${where}: ${m} is from the ${role(m)}, expected the ${want}`);
     }
   };
 
   cite("worthinessEvidence", a.worthinessEvidence);
+
+  const details = new Set<string>();
+  a.sensitive.forEach((s, i) => {
+    if (details.has(s.detail)) errors.push(`sensitive: duplicate detail "${s.detail}"`);
+    details.add(s.detail);
+    cite(`sensitive[${i}].messages`, s.messages, "user");
+  });
 
   for (const n of nodes.values()) {
     cite(`node "${n.id}".messages`, n.messages);
@@ -120,7 +135,20 @@ function crossCheck(a: Analysis): string[] {
   a.angles.forEach((ang, i) => {
     for (const id of ang.nodeIds) if (!nodes.has(id)) errors.push(`angles[${i}]: unknown node "${id}"`);
     for (const id of ang.signalIds) if (!signalIds.has(id)) errors.push(`angles[${i}]: unknown signal "${id}"`);
+    for (const d of ang.usesSensitive)
+      if (!details.has(d)) errors.push(`angles[${i}].usesSensitive: "${d}" does not match any sensitive[].detail`);
   });
+
+  // Heuristic: 9+ digits in a row (spaces or hyphens allowed between them) looks like an
+  // ID, card, account or phone number, which must never appear in any field.
+  const idLike = /\d(?:[ -]?\d){8,}/;
+  const scan = (v: unknown, path: string) => {
+    if (typeof v === "string") {
+      if (idLike.test(v)) errors.push(`${path}: looks like an ID or account number; describe it instead`);
+    } else if (Array.isArray(v)) v.forEach((x, i) => scan(x, `${path}[${i}]`));
+    else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) scan(x, path ? `${path}.${k}` : k);
+  };
+  scan(a, "");
 
   if (!a.worthy && (a.forest.length || a.signals.length || a.angles.length))
     errors.push("worthy is false, so forest, signals and angles must be empty arrays");
