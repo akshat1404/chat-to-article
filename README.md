@@ -34,11 +34,15 @@ The list is open: new signal kinds can be added without changing the schema.
 
 **Angles** come from combining the two layers. A topic alone gives an explainer ("How Rate Limiting Works"). A topic plus a signal gives a personal story ("The Analogy That Made Load Balancers Click"). Personal angles are ranked first because nobody else can write them.
 
-**Worthiness gate.** Not every chat deserves an article. A chat where you only drafted a LinkedIn reply is marked not worthy, with a reason, instead of being padded into something weak.
+**Worthiness gate.** Not every chat deserves an article. A chat where you only drafted a LinkedIn reply is marked not worthy, with a reason and the messages that back it up, instead of being padded into something weak.
+
+**Personal details.** Chats often reveal things like salary, age, health or where you bank. The skill lists each one in `sensitive` with its category and source messages. Angles may still use them, but every angle names the details it depends on in `usesSensitive`, so Stage 2 can ask you whether to keep, generalise or drop each one. ID and account numbers are never written to any field.
 
 ## Install
 
 **claude.ai:** zip the `skills/chat-to-article` folder and upload it under Settings → Capabilities → Skills.
+
+> The claude.ai copy does not sync from GitHub. Re-upload the skill after every change to `SKILL.md` or `schema.ts`, or claude.ai keeps running the old version. claude.ai only keeps `SKILL.md`, which is why the full schema is embedded in it.
 
 **Claude Code:** copy the folder into your skills directory:
 
@@ -55,6 +59,38 @@ Turn this chat into an article.
 ```
 
 The skill writes `analysis.json` (shape defined in [`schema.ts`](skills/chat-to-article/schema.ts)) and replies with a short summary: the topic trees, the 3 strongest signals, and the top 5 angles.
+
+## Output
+
+`analysis.json` holds:
+
+| Field | What it holds |
+|---|---|
+| `worthy`, `worthinessReason` | Whether the chat is article material, and why |
+| `worthinessEvidence` | Message ids that back up the reason |
+| `messageIndex` | One-line summary per message (`"m5": "user: ..."`), so later stages can look up messages without re-reading the chat |
+| `sensitive` | Every personal detail you revealed: `detail`, `category` (income, age, health, location, employer, financial-account, relationship, other) and `messages` |
+| `forest` | Topic trees. Each node has `id`, `title`, `summary`, `messages`, `ledBy`, `depth`, `links`, `children` |
+| `signals` | State changes. Each has an `id` (`"s1"`, `"s2"`, ...), `kind`, `group`, `nodeIds`, `trigger`, optional `cause`/`before`/`after`, and `confidence` |
+| `angles` | Article ideas. Each has `title`, `type`, `nodeIds`, `signalIds` (signal ids, not array positions), `hook`, `researchNeed` and `usesSensitive` |
+
+Every field is required. Empty lists are written as `[]`, never left out.
+
+## Development
+
+`schema.ts` is the source of truth. `SKILL.md` embeds a copy of it under "Output schema".
+
+```bash
+npm install
+npm run check-schema           # fails if the types block in SKILL.md differs from schema.ts
+npm run check-schema -- --fix  # copies schema.ts into SKILL.md
+npm run validate               # validates every examples/*.analysis.json
+npm run validate -- path/to/analysis.json
+```
+
+`validate` type-checks the project first: the zod schema in [`scripts/validate.ts`](scripts/validate.ts) is compared against the types in `schema.ts` at compile time, so the build fails if the two drift apart. It then checks each file for unknown or missing fields, broken node, signal, message and sensitive-detail references, triggers that are not user messages, and digit runs that look like ID or account numbers.
+
+After changing the schema, run both scripts, update the examples, then re-upload the skill to claude.ai.
 
 ## Examples
 
