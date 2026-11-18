@@ -1,8 +1,10 @@
 # chat-to-article
 
-A Claude skill that turns a chat session into article material.
+A Claude skill that finds article ideas in a chat session: it maps the topics, the moments where your understanding changed, and ranked article angles.
 
-Most useful chats with an AI hold more than answers. They hold the moment a concept finally clicked, a belief that got overturned, or a decision with real reasoning behind it. Those moments are what make an article worth reading, and they get lost when the chat ends. This skill reads the chat, maps what was discussed and how you related to it, and proposes articles only you could write.
+Stage 1, the only stage built so far, produces article ideas, not a finished article. Drafting comes in later stages (see [Roadmap](#roadmap)).
+
+Most useful chats with an AI hold more than answers. They hold the moment a concept finally clicked, a belief that got overturned, or a decision with real reasoning behind it. Those moments are what make an article worth reading, and they get lost when the chat ends. This skill reads the chat, maps what was discussed and how you related to it, and proposes article ideas only you could write.
 
 It works for any domain: system design, diet, finance, or anything else you learned through a conversation.
 
@@ -58,7 +60,7 @@ At the end of any chat, ask:
 Turn this chat into an article.
 ```
 
-The skill writes `analysis.json` (shape defined in [`schema.ts`](skills/chat-to-article/schema.ts)) and replies with a short summary: the topic trees, the 3 strongest signals, and the top 5 angles.
+You get article ideas, not an article. The skill writes `analysis.json` (shape defined in [`schema.ts`](skills/chat-to-article/schema.ts)) and replies with a short summary in plain words: the topic trees, the 3 strongest signals, and the top 5 angles. Internal ids like `s2` or `m21` stay in the file and never appear in the reply.
 
 ## Output
 
@@ -70,9 +72,9 @@ The skill writes `analysis.json` (shape defined in [`schema.ts`](skills/chat-to-
 | `worthinessEvidence` | Message ids that back up the reason |
 | `messageIndex` | One-line summary per message (`"m5": "user: ..."`), so later stages can look up messages without re-reading the chat |
 | `sensitive` | Every personal detail you revealed: `detail`, `category` (income, age, health, location, employer, financial-account, relationship, other) and `messages` |
-| `forest` | Topic trees. Each node has `id`, `title`, `summary`, `messages`, `ledBy`, `depth`, `links`, `children` |
-| `signals` | State changes. Each has an `id` (`"s1"`, `"s2"`, ...), `kind`, `group`, `nodeIds`, `trigger`, optional `cause`/`before`/`after`, and `confidence` |
-| `angles` | Article ideas. Each has `title`, `type`, `nodeIds`, `signalIds` (signal ids, not array positions), `hook`, `researchNeed` and `usesSensitive` |
+| `forest` | Topic trees. Each node has `id`, `title`, `summary`, `messages`, `ledBy`, `depth`, `links`, `children`. `depth` is the share of the parent's messages spent on the node (for a root, the share of the whole chat); siblings can overlap, so they may sum to more than 1 |
+| `signals` | State changes. Each has an `id` (`"s1"`, `"s2"`, ...), `kind`, `group`, `nodeIds`, `trigger`, optional `cause`/`before`/`after`, and `confidence`. Anything quoted in `before` or `after` comes from a user message in `trigger` |
+| `angles` | Article ideas. Each has `title`, `type`, `nodeIds`, `signalIds` (signal ids, not array positions), `hook`, `researchNeed` and `usesSensitive`. Personal angles have first-person hooks written as the article's opening line |
 
 Every field is required. Empty lists are written as `[]`, never left out.
 

@@ -1,11 +1,11 @@
 ---
 name: chat-to-article
-description: Turns the current chat into article material. Use when the user asks to turn this chat or conversation into an article, blog post, or write-up.
+description: Finds article ideas in the current chat: maps topics, moments where the user's understanding changed, and ranked article angles. Use when the user asks to turn this chat or conversation into an article, blog post, or write-up.
 ---
 
 # Chat to Article
 
-Stage 1 only: analyse the data. Do not draft an article, ask questions, or research yet.
+Stage 1 only: this stage produces article ideas, not a finished article. Do not draft an article, ask questions, or research yet.
 
 ## Step 1: Number the chat
 
@@ -34,6 +34,7 @@ If not worthy, set `worthy: false`, give the reason in one sentence, and stop: w
 - For each node, write the **final, corrected** understanding. If Claude said something wrong and was corrected later, keep only the corrected version.
 - Record `ledBy`: "user" if the user raised the topic, "assistant" if it came from Claude's roadmap.
 - Add `links` when one topic reuses another (Uber's design uses caching).
+- Set `depth` to the share of the parent's messages (the parent and everything under it) spent on this node, 0..1. For a root node, use its share of the whole chat. One message can count toward several siblings, so siblings may sum to more than 1.
 
 ## Step 5: Detect signals
 
@@ -42,6 +43,7 @@ A signal is any moment where the user's state changes. Rules:
 - **Give each signal an `id`**: s1, s2, ... in the order you detect them. Angles reference signals by these ids.
 - **Evidence comes from user messages.** `trigger` must be user turns. The assistant turn that caused the change goes in `cause`.
 - **Use the user's own words** for `before` and `after` where possible.
+- **Quotes need evidence.** Any text quoted in `before` or `after` must come from a user message listed in that signal's `trigger`. If the after state only shows in a later user message, add that message to `trigger`. Never use an assistant message as evidence for the user's state.
 - **Don't invent feelings.** Only tag `emotion` when the user says it ("I'm frustrated", "finally!").
 - **Score confidence honestly.** Normal follow-up questions are not a struggle. Tag a `breakthrough` only when there is repeated confusion followed by a clear "now I get it" moment.
 
@@ -71,9 +73,35 @@ New kinds are allowed if a moment fits none of these.
 - Set `researchNeed`: low for journeys (the chat is the source), high for health, finance, or legal claims.
 - Titles and hooks may use personal details, but list every detail an angle depends on in `usesSensitive`, copying the `detail` text from `sensitive` exactly. Stage 2 asks the user whether to keep, generalise or drop each one. Use `[]` if the angle uses none.
 
+### Hook voice
+
+For personal-story, journey and opinion angles, write the hook in the user's voice, in first person, as if it were the article's opening line. Never describe the user in third person ("taught him", "he learned").
+
+- Use "I" and "me". Use "we" only for something the reader shares.
+- Short, plain sentences. A two-word sentence is fine ("Really fast.").
+- State the uncomfortable or surprising part directly, without softening it.
+- No hype words, no em dashes, no rhetorical questions, no bold or italics.
+- Stay specific to what happened in the chat. Never invent details.
+
+Examples:
+
+- Bad: "A good salary felt like a guaranteed yes; the rejection taught him that banks care about history, not income."
+  Good: "I thought my salary was enough. It wasn't. The bank wanted to know if I had ever paid anything back, and I never had."
+- Bad: "The 'optimal' FD size felt like too much money to lock away, so he built a ramp-up plan instead."
+  Good: "Everyone said put in ₹1 lakh. I was not ready to lock that much away, so I started with ₹20,000."
+- Bad: "Every dumb-feeling question a first-timer actually asks, until the FD-backed card makes sense."
+  Good: "I asked the same question five different ways before the FD-backed card made sense. These are all of them."
+
+Explainer angles (overview, deep-dive, case-study, listicle, comparison) keep a neutral hook but follow the same plain-language rules.
+
 ## Step 7: Output
 
 Write `analysis.json` matching the output schema below, then reply with a short summary: the trees, the strongest 3 signals, and the top 5 angles.
+
+In the summary reply:
+
+- Describe signals and topics in plain words. Ids like "s2", "m21" or "cc.secured" stay in `analysis.json` only and never appear in the reply.
+- The first time the reply uses a term the reader may not know (signal, angle, FD), define it in plain language.
 
 Follow the schema exactly:
 
@@ -108,7 +136,7 @@ export type TopicNode = {
   summary: string; // the final, corrected understanding, not dead ends
   messages: MessageId[]; // where this topic was discussed
   ledBy: "user" | "assistant"; // who brought the topic up
-  depth: number; // share of the chat spent here, 0..1
+  depth: number; // share of the parent's messages spent on this node, 0..1; for root nodes, share of the whole chat. Siblings may overlap and sum to more than 1
   links: string[]; // ids of related nodes in any tree (Uber -> caching)
   children: TopicNode[];
 };

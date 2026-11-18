@@ -19,7 +19,7 @@ export type TopicNode = {
   summary: string; // the final, corrected understanding, not dead ends
   messages: MessageId[]; // where this topic was discussed
   ledBy: "user" | "assistant"; // who brought the topic up
-  depth: number; // share of the chat spent here, 0..1
+  depth: number; // share of the parent's messages spent on this node, 0..1; for root nodes, share of the whole chat. Siblings may overlap and sum to more than 1
   links: string[]; // ids of related nodes in any tree (Uber -> caching)
   children: TopicNode[];
 };

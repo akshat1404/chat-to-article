@@ -32,9 +32,9 @@
           "id": "sd.load-balancers",
           "title": "Load Balancers",
           "summary": "A load balancer routes incoming requests across servers so none gets overloaded; it runs no app logic itself. Needed because horizontal scaling requires something to pick a server for each request.",
-          "messages": ["m3", "m4", "m5", "m6", "m7", "m8", "m9"],
+          "messages": ["m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9"],
           "ledBy": "assistant",
-          "depth": 0.55,
+          "depth": 0.62,
           "links": [],
           "children": []
         },
@@ -42,9 +42,9 @@
           "id": "sd.caching",
           "title": "Caching",
           "summary": "Storing the result of an expensive operation so repeated requests are answered fast.",
-          "messages": ["m10"],
+          "messages": ["m2", "m10"],
           "ledBy": "assistant",
-          "depth": 0.08,
+          "depth": 0.15,
           "links": [],
           "children": []
         },
@@ -81,7 +81,7 @@
       "trigger": ["m11", "m13"],
       "cause": ["m12"],
       "before": "I always thought it was only a backend thing.",
-      "after": "Frontend has its own scaling problems too.",
+      "after": "So frontend has its own scaling problems too.",
       "confidence": 0.9
     },
     {
@@ -108,7 +108,7 @@
       "type": "personal-story",
       "nodeIds": ["sd.load-balancers"],
       "signalIds": ["s1", "s4"],
-      "hook": "Two textbook explanations failed; one everyday analogy worked.",
+      "hook": "I asked twice why a load balancer was needed and still didn't get it. Then it was compared to a restaurant host who seats people and cooks nothing. That clicked.",
       "researchNeed": "low",
       "usesSensitive": []
     },
@@ -117,7 +117,7 @@
       "type": "personal-story",
       "nodeIds": ["sd.frontend"],
       "signalIds": ["s2", "s3"],
-      "hook": "A common belief among frontend engineers, and why it's wrong.",
+      "hook": "I thought system design was only a backend thing. It isn't. Frontend has its own scaling problems, and I didn't know about them.",
       "researchNeed": "medium",
       "usesSensitive": []
     },
@@ -135,7 +135,7 @@
       "type": "overview",
       "nodeIds": ["sd.frontend"],
       "signalIds": [],
-      "hook": "The four areas frontend interviews test.",
+      "hook": "Bundle size, rendering, real-time updates and micro-frontends. The four areas it covers, in plain terms.",
       "researchNeed": "medium",
       "usesSensitive": []
     },
