@@ -42,7 +42,7 @@ The list is open: new signal kinds can be added without changing the schema.
 
 ## Install
 
-**claude.ai:** zip the `skills/chat-to-article` folder and upload it under Settings → Capabilities → Skills.
+**claude.ai:** upload `skills/chat-to-article/SKILL.zip` under Settings → Capabilities → Skills. The zip is not committed. After `npm install`, a git `post-commit` hook rebuilds it on every commit. Run `npm run zip` to build it by hand.
 
 > The claude.ai copy does not sync from GitHub. Re-upload the skill after every change to `SKILL.md` or `schema.ts`, or claude.ai keeps running the old version. claude.ai only keeps `SKILL.md`, which is why the full schema is embedded in it.
 

@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "validate": "tsc -p . && tsx scripts/validate.ts",
-    "check-schema": "tsx scripts/check-schema.ts"
+    "check-schema": "tsx scripts/check-schema.ts",
+    "zip": "tsx scripts/zip-skill.ts",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

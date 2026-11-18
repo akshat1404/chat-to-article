@@ -1,0 +1,4 @@
+#!/bin/sh
+# Rebuild skills/chat-to-article/SKILL.zip after every commit (upload it to claude.ai).
+cd "$(git rev-parse --show-toplevel)" || exit 0
+npx --no-install tsx scripts/zip-skill.ts || echo "post-commit: SKILL.zip not rebuilt (run npm install, then npm run zip)"
